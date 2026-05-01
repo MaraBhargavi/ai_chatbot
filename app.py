@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from chatbot import get_bot_response
 from database import init_db, save_chat, get_all_chats, seed_faq
+import os
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key_123"
@@ -82,6 +83,7 @@ def get_chats():
     return jsonify(chats)
 
 
-# ---------------- RUN ----------------
+# ---------------- RUN (IMPORTANT FIX) ----------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
