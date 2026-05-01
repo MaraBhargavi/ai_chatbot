@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FAQ Admin Panel</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        input {
+            padding: 8px;
+            width: 300px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+
+        .faq-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .delete {
+            color: red;
+            text-decoration: none;
+        }
+
+        .topbar {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <h2>FAQ Admin Panel</h2>
+    <a href="/admin">⬅ Back to Dashboard</a> |
+    <a href="/logout">Logout</a>
+</div>
+
+<hr>
+
+<!-- ADD FAQ -->
+<h3>Add New FAQ</h3>
+
+<form method="POST" action="/admin/faq/add">
+    <input type="text" name="question" placeholder="Enter question" required>
+    <br>
+    <input type="text" name="answer" placeholder="Enter answer" required>
+    <br>
+    <button type="submit">Add FAQ</button>
+</form>
+
+<hr>
+
+<!-- LIST FAQs -->
+<h3>Existing FAQs</h3>
+
+{% if faqs %}
+    {% for faq in faqs %}
+        <div class="faq-box">
+            <b>Q:</b> {{ faq[1] }} <br>
+            <b>A:</b> {{ faq[2] }} <br><br>
+
+            <a class="delete"
+               href="/admin/faq/delete/{{ faq[0] }}"
+               onclick="return confirm('Are you sure you want to delete this FAQ?');">
+               Delete
+            </a>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No FAQs found.</p>
+{% endif %}
+
+</body>
+</html>
