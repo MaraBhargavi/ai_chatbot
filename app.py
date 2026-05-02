@@ -5,10 +5,10 @@ import os
 
 app = Flask(__name__)
 
-# IMPORTANT: needed for session stability on Render
+# Session security (Render safe)
 app.secret_key = os.environ.get("SECRET_KEY", "super_secret_key_123")
 
-# initialize database
+# initialize DB
 init_db()
 seed_faq()
 
@@ -25,29 +25,31 @@ def chat():
     try:
         data = request.get_json()
 
-        if not data or "message" not in data:
-            return jsonify({"reply": "Invalid request"}), 400
+        # safe validation
+        if not data:
+            return jsonify({"reply": "Invalid request format"}), 400
 
         user_message = data.get("message", "").strip()
 
         if not user_message:
             return jsonify({"reply": "Please type something."})
 
+        # session context
         if "context" not in session:
             session["context"] = {}
 
         bot_response = get_bot_response(user_message, session["context"])
 
-        reply = bot_response["reply"]
-        session["context"] = bot_response["context"]
+        reply = bot_response.get("reply", "Sorry, I didn't understand that.")
+        session["context"] = bot_response.get("context", {})
 
         save_chat(user_message, reply)
 
         return jsonify({"reply": reply})
 
     except Exception as e:
-        print("ERROR:", e)
-        return jsonify({"reply": "Server error. Please try again."}), 500
+        print("🔥 CHAT ERROR:", str(e))
+        return jsonify({"reply": "Server error. Please try again later."}), 500
 
 
 # ---------------- LOGIN ----------------
@@ -90,8 +92,7 @@ def get_chats():
     if not session.get("admin_logged_in"):
         return jsonify([])
 
-    chats = get_all_chats()
-    return jsonify(chats)
+    return jsonify(get_all_chats())
 
 
 # ---------------- RUN ----------------
