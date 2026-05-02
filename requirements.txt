@@ -1,5 +1,4 @@
 Flask
 nltk
-transformers
-torch
 textblob
+gunicorn

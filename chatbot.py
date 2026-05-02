@@ -1,17 +1,12 @@
 import sqlite3
 import nltk
 from nltk.tokenize import word_tokenize
-from transformers import pipeline
 from textblob import TextBlob
 
 nltk.download("punkt", quiet=True)
 
-generator = pipeline(
-    "text-generation",
-    model="gpt2"
-)
 
-
+# -------- SENTIMENT --------
 def detect_sentiment(text):
     polarity = TextBlob(text).sentiment.polarity
 
@@ -23,6 +18,7 @@ def detect_sentiment(text):
         return "neutral"
 
 
+# -------- FAQ SEARCH --------
 def search_faq(user_message):
     conn = sqlite3.connect("chat_logs.db")
     cursor = conn.cursor()
@@ -51,6 +47,7 @@ def search_faq(user_message):
     return None
 
 
+# -------- MAIN CHATBOT --------
 def get_bot_response(user_message, context=None):
     if context is None:
         context = {}
@@ -58,30 +55,29 @@ def get_bot_response(user_message, context=None):
     text = user_message.lower().strip()
     words = word_tokenize(text)
 
-    # -------- DIRECT THANK YOU CHECK --------
+    # -------- THANK YOU --------
     if text in ["thank you", "thanks", "thankyou"]:
         return {
             "reply": "You're welcome! I'm happy I could help.",
             "context": {"last_topic": "positive"}
         }
 
+    # -------- SENTIMENT --------
     sentiment = detect_sentiment(user_message)
 
-    # -------- NEGATIVE SENTIMENT --------
     if sentiment == "negative":
         return {
             "reply": "I'm sorry you're facing this issue. I understand your frustration, and I'll do my best to help.",
             "context": {"last_topic": "negative"}
         }
 
-    # -------- POSITIVE --------
     if sentiment == "positive":
         return {
             "reply": "Glad to hear that. Let me know if you need anything else.",
             "context": {"last_topic": "positive"}
         }
 
-    # -------- FAQ FIRST --------
+    # -------- FAQ --------
     faq_answer = search_faq(user_message)
     if faq_answer:
         return {
@@ -89,84 +85,84 @@ def get_bot_response(user_message, context=None):
             "context": {"last_topic": "faq"}
         }
 
-    # -------- Greeting --------
+    # -------- GREETING --------
     if any(word in words for word in ["hi", "hello", "hey"]):
         return {
             "reply": "Hello! How can I help you today?",
             "context": {"last_topic": "greeting"}
         }
 
-    # -------- Cancel --------
+    # -------- CANCEL --------
     if "cancel" in words or "cancellation" in words:
         return {
             "reply": "Do you want to cancel an order, subscription, or something else?",
             "context": {"last_topic": "cancel"}
         }
 
-    # -------- Order --------
+    # -------- ORDER --------
     if "order" in words:
         return {
             "reply": "I can help with your order. Please share your order issue.",
             "context": {"last_topic": "order"}
         }
 
-    # -------- Payment --------
+    # -------- PAYMENT --------
     if "payment" in words or "pay" in words:
         return {
             "reply": "Please describe your payment issue.",
             "context": {"last_topic": "payment"}
         }
 
-    # -------- Shipping --------
+    # -------- SHIPPING --------
     if "shipping" in words or "delivery" in words:
         return {
             "reply": "I can help with shipping or delivery questions. What's the issue?",
             "context": {"last_topic": "shipping"}
         }
 
-    # -------- Refund --------
+    # -------- REFUND --------
     if "refund" in words:
         return {
             "reply": "I can help with refunds. Please share your refund request details.",
             "context": {"last_topic": "refund"}
         }
 
-    # -------- Return --------
+    # -------- RETURN --------
     if "return" in words:
         return {
             "reply": "I can help with returns. Please mention the product and reason for return.",
             "context": {"last_topic": "return"}
         }
 
-    # -------- Account --------
+    # -------- ACCOUNT --------
     if any(word in words for word in ["account", "login", "password"]):
         return {
             "reply": "Are you facing a login, password, or account access issue?",
             "context": {"last_topic": "account"}
         }
 
-    # -------- Support --------
+    # -------- SUPPORT --------
     if any(word in words for word in ["support", "problem", "issue"]):
         return {
             "reply": "Please describe the issue in detail so I can help.",
             "context": {"last_topic": "support"}
         }
 
-    # -------- Pricing --------
+    # -------- PRICING --------
     if any(word in words for word in ["price", "pricing", "plan"]):
         return {
             "reply": "Are you asking about pricing, subscription plans, or product cost?",
             "context": {"last_topic": "pricing"}
         }
 
-    # -------- Complaint --------
+    # -------- COMPLAINT --------
     if "complaint" in words:
         return {
             "reply": "I'm sorry you're having trouble. Please explain your complaint so I can assist.",
             "context": {"last_topic": "complaint"}
         }
 
-    # -------- Help --------
+    # -------- HELP --------
     if "help" in words:
         last_topic = context.get("last_topic")
 
@@ -183,22 +179,8 @@ def get_bot_response(user_message, context=None):
             "context": context
         }
 
-    # -------- AI FALLBACK --------
-    prompt = f"Customer support reply for: {user_message}\nAnswer:"
-
-    ai_reply = generator(
-        prompt,
-        max_length=60,
-        num_return_sequences=1,
-        truncation=True
-    )[0]["generated_text"]
-
-    cleaned = ai_reply.replace(prompt, "").strip()
-
-    if not cleaned:
-        cleaned = "Could you explain that a little more?"
-
+    # -------- SMART FALLBACK --------
     return {
-        "reply": cleaned,
+        "reply": "Could you clarify your question? I can help with orders, refunds, shipping, pricing, account login, and support issues.",
         "context": context
     }
