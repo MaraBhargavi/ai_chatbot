@@ -30,8 +30,8 @@ def search_faq(user_message):
 
     user_words = set(word_tokenize(user_message.lower()))
 
-    best_match = None
     best_score = 0
+    best_match = None
 
     for question, answer in faq_data:
         faq_words = set(word_tokenize(question.lower()))
@@ -55,10 +55,10 @@ def get_bot_response(user_message, context=None):
     text = user_message.lower().strip()
     words = word_tokenize(text)
 
-    # -------- THANK YOU --------
+    # -------- THANK YOU FIX --------
     if text in ["thank you", "thanks", "thankyou"]:
         return {
-            "reply": "You're welcome! I'm happy I could help.",
+            "reply": "You're welcome! I'm happy I could help 😊",
             "context": {"last_topic": "positive"}
         }
 
@@ -67,13 +67,13 @@ def get_bot_response(user_message, context=None):
 
     if sentiment == "negative":
         return {
-            "reply": "I'm sorry you're facing this issue. I understand your frustration, and I'll do my best to help.",
+            "reply": "I'm sorry you're facing this issue. I'll do my best to help you.",
             "context": {"last_topic": "negative"}
         }
 
     if sentiment == "positive":
         return {
-            "reply": "Glad to hear that. Let me know if you need anything else.",
+            "reply": "Glad to hear that 😊 Let me know if you need anything else.",
             "context": {"last_topic": "positive"}
         }
 
@@ -93,7 +93,7 @@ def get_bot_response(user_message, context=None):
         }
 
     # -------- CANCEL --------
-    if "cancel" in words or "cancellation" in words:
+    if "cancel" in words:
         return {
             "reply": "Do you want to cancel an order, subscription, or something else?",
             "context": {"last_topic": "cancel"}
@@ -102,7 +102,7 @@ def get_bot_response(user_message, context=None):
     # -------- ORDER --------
     if "order" in words:
         return {
-            "reply": "I can help with your order. Please share your order issue.",
+            "reply": "I can help with your order. Please share the details.",
             "context": {"last_topic": "order"}
         }
 
@@ -116,71 +116,71 @@ def get_bot_response(user_message, context=None):
     # -------- SHIPPING --------
     if "shipping" in words or "delivery" in words:
         return {
-            "reply": "I can help with shipping or delivery questions. What's the issue?",
+            "reply": "I can help with shipping or delivery. What is the issue?",
             "context": {"last_topic": "shipping"}
         }
 
     # -------- REFUND --------
     if "refund" in words:
         return {
-            "reply": "I can help with refunds. Please share your refund request details.",
+            "reply": "I can help with refunds. Please share details.",
             "context": {"last_topic": "refund"}
         }
 
     # -------- RETURN --------
     if "return" in words:
         return {
-            "reply": "I can help with returns. Please mention the product and reason for return.",
+            "reply": "I can help with returns. Please explain the reason.",
             "context": {"last_topic": "return"}
         }
 
     # -------- ACCOUNT --------
     if any(word in words for word in ["account", "login", "password"]):
         return {
-            "reply": "Are you facing a login, password, or account access issue?",
+            "reply": "Are you facing login or account issues?",
             "context": {"last_topic": "account"}
         }
 
     # -------- SUPPORT --------
-    if any(word in words for word in ["support", "problem", "issue"]):
+    if any(word in words for word in ["support", "issue", "problem"]):
         return {
-            "reply": "Please describe the issue in detail so I can help.",
+            "reply": "Please describe your issue so I can help.",
             "context": {"last_topic": "support"}
         }
 
     # -------- PRICING --------
     if any(word in words for word in ["price", "pricing", "plan"]):
         return {
-            "reply": "Are you asking about pricing, subscription plans, or product cost?",
+            "reply": "Are you asking about pricing or subscription plans?",
             "context": {"last_topic": "pricing"}
         }
 
     # -------- COMPLAINT --------
     if "complaint" in words:
         return {
-            "reply": "I'm sorry you're having trouble. Please explain your complaint so I can assist.",
+            "reply": "I'm sorry about that. Please explain your complaint.",
             "context": {"last_topic": "complaint"}
         }
 
-    # -------- HELP --------
+    # -------- HELP (FIXED SAFE VERSION) --------
     if "help" in words:
         last_topic = context.get("last_topic")
 
         mapping = {
-            "order": "You were asking about your order. Please share your order details.",
-            "payment": "You mentioned a payment issue. Please describe what happened.",
-            "shipping": "You were asking about shipping. Tell me the delivery issue.",
-            "refund": "You mentioned a refund. Please share order details.",
-            "faq": "Can you tell me which FAQ topic you need help with?"
+            "order": "You were asking about orders. Please share details.",
+            "payment": "You mentioned payment issue. Please explain.",
+            "shipping": "You were asking about shipping. Tell me more.",
+            "refund": "You mentioned refund. Please share details.",
+            "faq": "Tell me which FAQ topic you need help with."
         }
 
         return {
-            "reply": mapping.get(last_topic, "Sure. Tell me what problem you're facing."),
+            "reply": mapping.get(last_topic, "Sure, please tell me your issue."),
             "context": context
         }
 
-    # -------- SMART FALLBACK --------
+    # -------- FINAL FALLBACK (SAFE) --------
     return {
-        "reply": "Could you clarify your question? I can help with orders, refunds, shipping, pricing, account login, and support issues.",
+        "reply": "I can help with orders, refunds, shipping, payments, accounts, and support. Please tell me your issue.",
         "context": context
     }
