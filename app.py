@@ -4,7 +4,9 @@ from database import init_db, save_chat, get_all_chats, seed_faq
 import os
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key_123"
+
+# IMPORTANT: needed for session stability on Render
+app.secret_key = os.environ.get("SECRET_KEY", "super_secret_key_123")
 
 # initialize database
 init_db()
@@ -20,23 +22,32 @@ def home():
 # ---------------- CHAT ----------------
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.get_json()
-    user_message = data.get("message", "").strip()
+    try:
+        data = request.get_json()
 
-    if not user_message:
-        return jsonify({"reply": "Please type something."})
+        if not data or "message" not in data:
+            return jsonify({"reply": "Invalid request"}), 400
 
-    if "context" not in session:
-        session["context"] = {}
+        user_message = data.get("message", "").strip()
 
-    bot_response = get_bot_response(user_message, session["context"])
+        if not user_message:
+            return jsonify({"reply": "Please type something."})
 
-    reply = bot_response["reply"]
-    session["context"] = bot_response["context"]
+        if "context" not in session:
+            session["context"] = {}
 
-    save_chat(user_message, reply)
+        bot_response = get_bot_response(user_message, session["context"])
 
-    return jsonify({"reply": reply})
+        reply = bot_response["reply"]
+        session["context"] = bot_response["context"]
+
+        save_chat(user_message, reply)
+
+        return jsonify({"reply": reply})
+
+    except Exception as e:
+        print("ERROR:", e)
+        return jsonify({"reply": "Server error. Please try again."}), 500
 
 
 # ---------------- LOGIN ----------------
@@ -83,7 +94,7 @@ def get_chats():
     return jsonify(chats)
 
 
-# ---------------- RUN (IMPORTANT FIX) ----------------
+# ---------------- RUN ----------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=False)
