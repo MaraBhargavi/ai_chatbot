@@ -5,10 +5,10 @@ import os
 
 app = Flask(__name__)
 
-# Session security (Render safe)
+# Secure session key (Render safe)
 app.secret_key = os.environ.get("SECRET_KEY", "super_secret_key_123")
 
-# initialize DB
+# Initialize DB
 init_db()
 seed_faq()
 
@@ -25,8 +25,8 @@ def chat():
     try:
         data = request.get_json()
 
-        # safe validation
-        if not data:
+        # Validate request
+        if not data or "message" not in data:
             return jsonify({"reply": "Invalid request format"}), 400
 
         user_message = data.get("message", "").strip()
@@ -34,15 +34,17 @@ def chat():
         if not user_message:
             return jsonify({"reply": "Please type something."})
 
-        # session context
+        # Session context
         if "context" not in session:
             session["context"] = {}
 
+        # Chatbot response
         bot_response = get_bot_response(user_message, session["context"])
 
         reply = bot_response.get("reply", "Sorry, I didn't understand that.")
         session["context"] = bot_response.get("context", {})
 
+        # Save chat
         save_chat(user_message, reply)
 
         return jsonify({"reply": reply})
